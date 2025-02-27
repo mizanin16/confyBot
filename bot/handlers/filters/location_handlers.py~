@@ -1,0 +1,41 @@
+from aiogram import Router, types, F
+from aiogram.fsm.context import FSMContext
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+from bot.states.filter_states import FilterStates
+from bot.keyboards.inline_keyboards import get_location_keyboard
+from bot.utils.keyboard_utils import add_custom_input_button
+
+router = Router()
+
+@router.callback_query(FilterStates.location)
+async def confirm_theme(message: types.Message , state: FSMContext):
+    """Confirms theme selection"""
+    user_data = await state.get_data()
+    themes = user_data.get("themes", [])
+    await state.update_data(theme=", ".join(themes))
+    keyboard = add_custom_input_button(get_geo_keyboard())
+    await callback.message.edit_text(
+        f"Выбраны тематики: {', '.join(themes)}\n\nВыберите гео мероприятия:",
+        reply_markup=keyboard
+    )
+    await state.set_state(FilterStates.geo)
+
+@router.callback_query(FilterStates.location, F.data == "custom_input")
+async def location_custom_input(callback: types.CallbackQuery, state: FSMContext):
+    """Обрабатывает ввод местоположения вручную"""
+    await callback.message.edit_text("Введите город или область:")
+    await state.set_state(FilterStates.location_custom)
+
+@router.message(FilterStates.location_custom)
+async def process_custom_location(message: types.Message, state: FSMContext):
+    """Обрабатывает пользовательский ввод местоположения"""
+    await state.update_data(location=message.text)
+    await message.answer(
+        f"Выбрано местоположение: {message.text}\n\nПодтвердите выбор:",
+        reply_markup=get_location_keyboard()
+    )
+    await state.set_state(FilterStates.confirm)
+
+def register_location_handlers(dp):
+    dp.include_router(router)

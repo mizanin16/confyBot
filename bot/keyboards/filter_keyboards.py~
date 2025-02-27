@@ -1,0 +1,48 @@
+# bot/keyboards/filter_keyboards.py
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
+from ..states.filter_states import (
+    EventTheme, EventGeo,
+    EventDateFilter, EventCostFilter,
+    EventFormatFilter
+)
+
+
+def get_theme_keyboard() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    for theme in EventTheme:
+        builder.add(KeyboardButton(text=theme.value))
+    builder.adjust(1)
+    return builder.as_markup(resize_keyboard=True)
+
+
+def get_geo_keyboard() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    for geo in EventGeo:
+        builder.add(KeyboardButton(text=geo.value))
+    builder.adjust(1)
+    return builder.as_markup(resize_keyboard=True)
+
+
+def get_date_keyboard() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    for date_filter in EventDateFilter:
+        builder.add(KeyboardButton(text=date_filter.value))
+    builder.adjust(1)
+    return builder.as_markup(resize_keyboard=True)
+
+
+def get_cost_keyboard() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    for cost_filter in EventCostFilter:
+        builder.add(KeyboardButton(text=cost_filter.value))
+    builder.adjust(1)
+    return builder.as_markup(resize_keyboard=True)
+
+
+def get_format_keyboard() -> ReplyKeyboardMarkup:
+    builder = ReplyKeyboardBuilder()
+    for format_filter in EventFormatFilter:
+        builder.add(KeyboardButton(text=format_filter.value))
+    builder.adjust(1)
+    return builder.as_markup(resize_keyboard=True)

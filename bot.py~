@@ -3,7 +3,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 from aiogram.utils.token import TokenValidationError
 from bot.config import BOT_TOKEN
-from bot.handlers.start import register_start_handler
+from handlers.start import register_start_handler
 
 async def main():
     try:

@@ -1,6 +1,6 @@
 from gspread import service_account
 from typing import List, Dict
-from config import SERVICE_ACCOUNT_FILE, GOOGLE_SHEET_ID, SHEET_NAME
+from bot.config import SERVICE_ACCOUNT_FILE, GOOGLE_SHEET_ID, SHEET_NAME
 
 
 def connect_to_google_sheets():
@@ -20,13 +20,25 @@ def fetch_google_sheet_data() -> List[Dict]:
     """
     table = connect_to_google_sheets()
     worksheet = table.worksheet(SHEET_NAME)
-    headers = worksheet.row_values(1)[:-3]  # Заголовки из первой строки
+    headers = worksheet.row_values(1)  # Заголовки из первой строки
     rows = worksheet.get_all_values()[1:]  # Данные со второй строки
 
     # Преобразуем данные в список словарей
     data = []
     for row in rows:
-        row_dict = {headers[i]: value for i, value in enumerate(row[:-3])}
+        row_dict = {headers[i]: value for i, value in enumerate(row)}
         data.append(row_dict)
 
     return data
+
+def append_to_google_sheets(data: Dict):
+    """
+    Добавляет данные в Google Sheets.
+
+    :param data: Словарь с данными для добавления.
+    """
+    table = connect_to_google_sheets()
+    worksheet = table.worksheet('Users')
+    print(data.values())
+    values = [str(value) if not isinstance(value, str) else value.strip() for value in data.values()]
+    worksheet.append_row(values)

@@ -1,0 +1,26 @@
+from aiogram import Router, types, F
+from bot.db.queries import get_user_subscriptions
+from bot.keyboards.inline_keyboards import get_subscriptions_keyboard, get_main_menu_keyboard
+
+router = Router()
+
+@router.callback_query(F.data == "view_subscriptions")
+async def view_subscriptions(callback: types.CallbackQuery):
+    """Отображает список подписок пользователя"""
+    user_id = callback.from_user.id
+    subscriptions = get_user_subscriptions(user_id)
+
+    if not subscriptions:
+        await callback.message.edit_text("😕 У вас пока нет подписок.", reply_markup=get_main_menu_keyboard())
+        return
+
+    await callback.message.edit_text(
+        "📜 Ваши подписки:\nВыберите для удаления:",
+        reply_markup=get_subscriptions_keyboard(subscriptions)  # ❌ Убрана кнопка "Назад"
+    )
+
+@router.callback_query(F.data == "back_to_main")
+async def back_to_main(callback: types.CallbackQuery):
+    """Возвращает пользователя в главное меню"""
+    await callback.message.edit_text("👋 Добро пожаловать в главное меню!", reply_markup=get_main_menu_keyboard())
+    await callback.answer()

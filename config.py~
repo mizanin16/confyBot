@@ -1,0 +1,11 @@
+# Токен бота (замените на свой токен)
+BOT_TOKEN = "7773824736:AAGIcA03TOgiLRe8IcYGJe1by27Y4Ydd9NQ"
+
+# Файл сервисного аккаунта Google
+SERVICE_ACCOUNT_FILE = "credentials.json"
+
+# ID таблицы Google Sheets (из URL)
+GOOGLE_SHEET_ID = "1kfQNErPnoZsCek2OjXZoSD3OZdilf4LsXdPIgS-G6Y4"
+
+# Имя листа
+SHEET_NAME = "IT"
