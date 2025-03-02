@@ -3,7 +3,8 @@ from .database import Database
 db = Database()
 
 
-def save_filters(user_id: int, subscription_name: str, category: str, date: str, cost: str, format_: str, location: str):
+def save_filters(user_id: int, subscription_name: str, category: str, date: str, cost: str, format_: str,
+                 location: str):
     """Сохраняет выбранные пользователем фильтры в БД"""
     conn = db.get_connection()
     cursor = conn.cursor()
@@ -155,6 +156,7 @@ def get_users_for_notification(days_before: str) -> list:
     # Преобразуем результаты в список ID пользователей
     return [row[0] for row in results]
 
+
 def get_filter_details(subscription_id: int):
     """
 
@@ -182,3 +184,143 @@ def get_filter_details(subscription_id: int):
         }
     return None
 
+
+def get_filtered_events(filter_details: dict) -> list:
+    """
+    Получает мероприятия, соответствующие заданным фильтрам
+
+    Args:
+        filter_details: Словарь с параметрами фильтров
+
+    Returns:
+        list: Список мероприятий, соответствующих фильтрам
+    """
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    # Базовый запрос
+    query = """
+        SELECT id, event_date, event_name, description, location, event_type, 
+               event_link, category, hashtags, cost, event_time
+        FROM events
+        WHERE 1=1
+    """
+    params = []
+
+    # Фильтрация по категории
+    if filter_details.get('category') and filter_details['category'] != "Показать все" and filter_details[
+        'category'] != "Не выбрано":
+        categories = filter_details['category'].split(', ')
+        category_conditions = []
+
+        for category in categories:
+            category_conditions.append("category LIKE ?")
+            params.append(f"%{category.upper()}%")
+
+        query += f" AND ({' OR '.join(category_conditions)})"
+
+    # Фильтрация по стоимости
+    if filter_details.get('cost') and filter_details['cost'] != "Показывать все" and filter_details[
+        'cost'] != "Не выбрано":
+        if filter_details['cost'] == "Бесплатно":
+            query += " AND (cost LIKE ? OR cost = '0' OR cost = '')"
+            params.append("%бесплатно%")
+        elif "До" in filter_details['cost']:
+            try:
+                value = ''.join(c for c in filter_details['cost'] if c.isdigit())
+                if value:
+                    value = int(value)
+                    query += " AND (CAST(REPLACE(REPLACE(cost, ' ', ''), '.', '') AS INTEGER) < ? OR cost LIKE ?)"
+                    params.extend([value, "%бесплатно%"])
+            except (ValueError, TypeError):
+                pass
+        elif "От" in filter_details['cost']:
+            try:
+                value = ''.join(c for c in filter_details['cost'] if c.isdigit())
+                if value:
+                    value = int(value)
+                    query += " AND CAST(REPLACE(REPLACE(cost, ' ', ''), '.', '') AS INTEGER) >= ?"
+                    params.append(value)
+            except (ValueError, TypeError):
+                pass
+
+    # Фильтрация по дате
+    if filter_details.get('date') and filter_details['date'] != "Не выбрано":
+        if " - " in filter_details['date']:
+            try:
+                start_date, end_date = filter_details['date'].split(" - ")
+                query += " AND (strftime('%Y%m%d', substr(event_date, 7, 4) || '-' || substr(event_date, 4, 2) || '-' || substr(event_date, 1, 2)) BETWEEN strftime('%Y%m%d', ?) AND strftime('%Y%m%d', ?))"
+                start_parts = start_date.split('.')
+                end_parts = end_date.split('.')
+                start_formatted = f"{start_parts[2]}-{start_parts[1]}-{start_parts[0]}"
+                end_formatted = f"{end_parts[2]}-{end_parts[1]}-{end_parts[0]}"
+                params.extend([start_formatted, end_formatted])
+            except (ValueError, IndexError):
+                pass
+        else:
+            try:
+                date_parts = filter_details['date'].split('.')
+                date_formatted = f"{date_parts[2]}-{date_parts[1]}-{date_parts[0]}"
+                query += " AND strftime('%Y%m%d', substr(event_date, 7, 4) || '-' || substr(event_date, 4, 2) || '-' || substr(event_date, 1, 2)) = strftime('%Y%m%d', ?)"
+                params.append(date_formatted)
+            except (ValueError, IndexError):
+                pass
+
+    # Сортировка по дате
+    query += " ORDER BY strftime('%Y%m%d', substr(event_date, 7, 4) || '-' || substr(event_date, 4, 2) || '-' || substr(event_date, 1, 2)) ASC"
+
+    print(query, params)  # Для отладки
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [{
+        "id": row[0],
+        "event_date": row[1],
+        "event_name": row[2],
+        "description": row[3],
+        "location": row[4],
+        "event_type": row[5],
+        "event_link": row[6],
+        "category": row[7],
+        "hashtags": row[8],
+        "cost": row[9],
+        "event_time": row[10]
+    } for row in rows]
+
+
+def get_filter_by_name(user_id: int, subscription_name: str):
+    """
+    Получает детали фильтра по имени подписки для конкретного пользователя
+
+    Args:
+        user_id: ID пользователя
+        subscription_name: Название подписки
+
+    Returns:
+        dict: Словарь с параметрами фильтра или None, если фильтр не найден
+    """
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT id, subscription_name, category, date, cost, format, location 
+        FROM user_filters
+        WHERE user_id = ? AND subscription_name = ?
+        ORDER BY id DESC
+        LIMIT 1
+    """, (user_id, subscription_name))
+
+    result = cursor.fetchone()
+    conn.close()
+
+    if result:
+        return {
+            "subscription_name": result[1],
+            "category": result[2],
+            "date": result[3],
+            "cost": result[4],
+            "format": result[5],
+            "location": result[6]
+        }
+    return None

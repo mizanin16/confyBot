@@ -79,7 +79,7 @@ class Database:
                     event.get("Место расположения"),
                     event.get("Тип мероприятия(Офлайн или онлайн)"),
                     event.get("Ссылка на мероприятие"),
-                    event.get("Тип основной"),
+                    event.get("Тип основной").upper(),
                     event.get("Хештеги"),
                     event.get("Стоимость"),
                     event.get("Время")

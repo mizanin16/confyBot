@@ -88,9 +88,10 @@ def get_subscriptions_keyboard(subscriptions):
 
 def get_main_menu_keyboard():
     """Главное меню с кнопкой просмотра подписок"""
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📌 Добавить подписку", callback_data="add_subscription")],
-        [InlineKeyboardButton(text="📜 Мои подписки", callback_data="view_subscriptions")],
-        [InlineKeyboardButton(text="🔍 Поиск мероприятий", callback_data="search_events")],
-        [InlineKeyboardButton(text="⚙️ Настройки", callback_data="settings")]
-    ])
+    builder = InlineKeyboardBuilder()
+    builder.button(text="📌 Добавить подписку", callback_data="add_subscription")
+    builder.button(text="📜 Мои подписки", callback_data="view_subscriptions")
+    builder.button(text="🔍 Поиск мероприятий", callback_data="search_events")
+    builder.button(text="⚙️ Настройки", callback_data="settings")
+    builder.adjust(1)  # По одной кнопке в ряду
+    return builder.as_markup()
