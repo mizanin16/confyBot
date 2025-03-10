@@ -3,6 +3,8 @@ from aiogram.fsm.context import FSMContext
 
 from bot.states.filter_states import FilterStates
 from bot.db.queries import save_filters  # Импортируем функцию
+from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 router = Router()
 
@@ -31,7 +33,15 @@ async def confirm_selection(callback: types.CallbackQuery, state: FSMContext):
         "\nФильтр установлен! Вы можете начать поиск."
     )
 
-    await callback.message.edit_text(response_text)
+    # Создаем клавиатуру с кнопками
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="В главное меню", callback_data="back_to_main"),
+        InlineKeyboardButton(text="Мои подписки", callback_data="view_subscriptions")
+    )
+
+    # Отправляем сообщение с клавиатурой
+    await callback.message.edit_text(response_text, reply_markup=builder.as_markup())
     await state.clear()
 
 def register_confirm_handlers(dp):

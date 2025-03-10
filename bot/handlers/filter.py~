@@ -1,6 +1,0 @@
-from aiogram import types
-from aiogram.filters import Command  # Используем новый подход для фильтрации
-from handlers.start import router
-
-
-

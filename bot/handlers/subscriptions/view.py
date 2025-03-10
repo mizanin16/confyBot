@@ -1,10 +1,12 @@
 from aiogram import Router, types, F
 from bot.keyboards.inline_keyboards import get_main_menu_keyboard
-from handlers.subscriptions.utils import show_user_subscriptions
+from bot.handlers.subscriptions.utils import show_user_subscriptions
+from aiogram.filters import Command
 
 router = Router()
 
 @router.callback_query(F.data == "view_subscriptions")
+@router.message(Command("subscriptions"))
 async def view_subscriptions(callback: types.CallbackQuery):
     """Обработчик кнопки 'Мои подписки'"""
     await show_user_subscriptions(callback)

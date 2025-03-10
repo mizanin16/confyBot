@@ -7,10 +7,12 @@ from bot.keyboards.inline_keyboards import get_main_menu_keyboard
 
 router = Router()
 
+
 @router.message(Command("start"))
 async def start_command(message: types.Message):
     """Приветственное сообщение с меню"""
     await message.answer("👋 Добро пожаловать! Выберите действие:", reply_markup=get_main_menu_keyboard())
+
 
 @router.callback_query(F.data == "add_subscription")  # Исправлено
 async def add_subscription(callback: types.CallbackQuery, state: FSMContext):
@@ -21,18 +23,18 @@ async def add_subscription(callback: types.CallbackQuery, state: FSMContext):
     await set_filter_name(callback.message, state)
 
 
-
 @router.message(Command("help"))
 async def help_command(message: types.Message):
-    await message.answer("Для получения информации о командах используйте /commands")
-
+    await message.answer("Познакомимся поближе?\n Я помогу вам отследить предстоящие мероприятия.\n\n "
+                         "Для начала работы введите команду /start и выберите интересующую вас категорию.\n"
+                         "Для получения подробных сведений о добавленных подписках введите /subscriptions\n"
+                         "Для настройки бота введите /settings"
+                         )
 
 @router.message(Command("commands"))
 async def commands_command(message: types.Message):
     await message.answer("Список команд:\n/start - запустить бота\n/help - справка по боту\n/settings - настройка")
 
 
-
 def register_command_handlers(dp):
     dp.include_router(router)
-

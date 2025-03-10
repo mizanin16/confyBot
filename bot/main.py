@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import time
+
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
@@ -10,6 +12,7 @@ from bot.services.notification_service import schedule_notifications
 from bot.middleware.update_middleware import DataUpdateMiddleware
 from bot.services.event_service import EventService
 from bot.db.queries import Database
+from bot.handlers.data_updater import update_events_from_sheets
 
 async def set_bot_commands(bot: Bot):
     """
@@ -17,6 +20,7 @@ async def set_bot_commands(bot: Bot):
     """
     commands = [
         BotCommand(command="start", description="Запустить бота"),
+        BotCommand(command="subscriptions", description="Мои подписки"),
         BotCommand(command="help", description="Справка по боту"),
         BotCommand(command="settings", description="Настройка"),
     ]
@@ -41,8 +45,14 @@ async def main():
         await set_bot_commands(bot)
         register_all_handlers(dp)
         event_service = EventService(db)
-        asyncio.create_task(schedule_notifications(bot, event_service))
-        logger.info("Starting bot...")
+
+        # Проверяем, есть ли данные в таблице events
+        success, message = await update_events_from_sheets()
+        if success:
+            logger.info("Data updated successfully, scheduling notifications")
+            asyncio.create_task(schedule_notifications(bot, event_service))
+        else:
+            logger.error(f"Failed to update data: {message}")
         await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     except Exception as e:
         logger.error(f"An error occurred: {e}")

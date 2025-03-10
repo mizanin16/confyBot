@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from aiogram import Bot
 from bot.db.queries import get_users_for_notification, get_user_subscriptions, get_filter_details
 from bot.services.event_service import EventService
-
+from bot.services.notification_utils import get_day_word
 
 async def send_notification(bot: Bot, user_id: int, message: str):
     """Отправляет уведомление пользователю с обработкой ошибок."""
@@ -18,7 +18,7 @@ async def send_notification(bot: Bot, user_id: int, message: str):
 async def process_notifications(bot: Bot, event_service: EventService, days_before: int, period_code: str):
     """Обрабатывает уведомления с оптимизацией."""
     users = get_users_for_notification(period_code)
-    target_date = (datetime.now() + timedelta(days=days_before)).strftime("%Y-%m-%d")
+    target_date = (datetime.now() + timedelta(days=days_before)).strftime("%d.%m.%Y")
     sent_notifications = set()  # Для предотвращения дубликатов
 
     tasks = []
@@ -40,11 +40,13 @@ async def process_notifications(bot: Bot, event_service: EventService, days_befo
                 for i, event in enumerate(events[:5], 1):
                     message += (f"{i}. {event['title']}\n"
                                 f"📅 {event['date']}\n"
-                                f"📍 {event['location']}\n\n")
+                                f"📍 {event['location']}\n"
+                                f"🔗 {event['url']} \n"
+                                f"📌 {event['format']}\n\n")
 
                 if len(events) > 5:
                     message += f"...и еще {len(events) - 5} мероприятий\n"
-                message += f"Через {days_before} дней."
+                message += f"Все мероприятия через {days_before} {get_day_word(days_before)}."
 
                 tasks.append(send_notification(bot, user_id, message))
                 sent_notifications.add((user_id, sub_id))
@@ -61,7 +63,7 @@ async def schedule_notifications(bot: Bot, event_service: EventService):
     while True:
         now = datetime.now()
         # Более гибкое время отправки (например, с 9 до 11 утра)
-        if 20 <= now.hour <= 21:
+        if 12 <= now.hour <= 13:
             for days, period in periods:
                 await process_notifications(bot, event_service, days, period)
             # Спим до следующего дня

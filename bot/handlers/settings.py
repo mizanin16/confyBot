@@ -68,7 +68,7 @@ async def save_notification_settings(callback: types.CallbackQuery):
 @router.callback_query(F.data == "back_to_main_from_settings")
 async def back_to_main_from_settings(callback: types.CallbackQuery):
     """Возврат в главное меню из настроек"""
-    from bot.keyboards.inline_keyboards import get_main_menu_keyboard
+    from keyboards.inline_keyboards import get_main_menu_keyboard
 
     await callback.message.edit_text("👋 Добро пожаловать в главное меню!", reply_markup=get_main_menu_keyboard())
     await callback.answer()
@@ -78,7 +78,7 @@ def get_settings_keyboard():
     """Клавиатура меню настроек"""
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🔔 Настройка уведомлений", callback_data="notification_settings")],
-        [InlineKeyboardButton(text="⬅️ Вернуться в главное меню", callback_data="back_to_main_from_settings")]
+        [InlineKeyboardButton(text="⬅️ Вернуться в главное меню", callback_data="back_to_main")]
     ])
     return keyboard
 

@@ -1,6 +1,6 @@
 from aiogram import Router, types, F
 from bot.db.queries import delete_subscription
-from handlers.subscriptions.utils import show_user_subscriptions
+from bot.handlers.subscriptions.utils import show_user_subscriptions
 
 router = Router()
 
