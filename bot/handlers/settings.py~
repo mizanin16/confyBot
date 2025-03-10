@@ -8,6 +8,7 @@ router = Router()
 
 
 @router.callback_query(F.data == "settings")
+@router.message(Command("settings"))
 async def settings_menu(callback: types.CallbackQuery):
     """Обработчик кнопки 'Настройки'"""
     keyboard = get_settings_keyboard()
